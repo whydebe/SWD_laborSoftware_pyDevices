@@ -8,9 +8,9 @@ from colorama import Fore
 
 
 source_urls = [
-    'https://raw.githubusercontent.com/whydebe/SWD_laborSoftware_pyDevices_Server/main/dist/server.exe',
-    'https://raw.githubusercontent.com/whydebe/SWD_laborSoftware_pyDevices_Server/main/server.py',
-    'https://raw.githubusercontent.com/whydebe/SWD_laborSoftware_pyDevices_Server/main/config/config.json'
+    'https://raw.githubusercontent.com/whydebe/SWD_laborSoftware_pyDevices/main/server/dist/server.exe',
+    'https://raw.githubusercontent.com/whydebe/SWD_laborSoftware_pyDevices/main/server/server.py',
+    'https://raw.githubusercontent.com/whydebe/SWD_laborSoftware_pyDevices/main/server/config/config.json'
 ]
 
 paths = [
