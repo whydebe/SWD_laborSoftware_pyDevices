@@ -1,7 +1,9 @@
 import http.server
 import socketserver
+import socket
 import json
 import os
+# import re
 import hashlib
 import time
 import subprocess
@@ -218,9 +220,40 @@ class PostRequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(f'Failed to stop media playback: {result.stderr}'.encode())
 
 
+
 # Server configuration
-host = '169.254.148.225'
+config_file_path = './config/config.json'
+default_host = '127.0.0.1'
+host = ''
 port = 8000
+
+# Check if the config file exists and has the "ipv4_address" entry
+# if os.path.exists(config_file_path):
+#     with open(config_file_path, 'r') as json_file:
+#         config_data = json.load(json_file)
+#         ipv4_address = config_data.get('ipv4_address')
+# 
+#         if ipv4_address and isinstance(ipv4_address, str) and len(ipv4_address) > 0:
+#             # Check if the "ipv4_address" has a valid IPv4 format
+#             import re
+#             ipv4_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
+#             if re.match(ipv4_pattern, ipv4_address):s
+#                 host = ipv4_address
+#             else:
+#                 host = '127.0.0.1'
+#         else:
+#             host = '127.0.0.1'
+# else:
+#     host = '127.0.0.1'
+
+# Get the IPv4 address
+try:
+    hostname = socket.getfqdn()
+    ip_address = socket.gethostbyname_ex(hostname)[2][1]
+    host = f'{ip_address}'
+except Exception as e:
+    print(f"Failed to retrieve IPv4 address: {str(e)}")
+    host = f'{default_host}'
 
 # Create the server
 server = socketserver.TCPServer((host, port), PostRequestHandler)
