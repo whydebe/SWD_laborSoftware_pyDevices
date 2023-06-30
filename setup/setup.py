@@ -1,6 +1,9 @@
 import os
 import sys
 import time
+import json
+import socket
+import platform
 import subprocess
 import requests
 import winshell # + pip install pywin32
@@ -29,16 +32,13 @@ def print_ascii_art():
 
     print(f'{Fore.LIGHTBLACK_EX}    Made by: {Fore.RESET}{Fore.LIGHTMAGENTA_EX}whydebe{Fore.RESET}')
 
-
 def menu_main():
     operation = input(f'''
             {Fore.RED}What do you want to do? - Choose the option by entering the specific number{Fore.RESET}
-            {Fore.BLUE}[1] Auto-Setup (Chocolatey, VLC + Setup of server.exe) + Start
-            {Fore.LIGHTBLACK_EX}[2] Manual Setup (WIP){Fore.BLUE}
-            {Fore.LIGHTBLACK_EX}[3] Set config.json manually (WIP){Fore.BLUE}
-            {Fore.LIGHTBLACK_EX}[4] Uninstall (but not the setup.exe) (WIP){Fore.BLUE}
-            {Fore.LIGHTRED_EX}[5] Exit
-            {Fore.RESET}
+            {Fore.BLUE}[1] Auto-Setup (Chocolatey, VLC + Setup of server.exe) + Start{Fore.RESET}
+            {Fore.BLUE}[2] Set config.json manually{Fore.RESET}
+            {Fore.LIGHTBLACK_EX}[3] Uninstall (but not the setup.exe) (WIP){Fore.RESET}
+            {Fore.LIGHTRED_EX}[4] Exit{Fore.RESET}
     > ''')
 
     if str(operation) == "1":
@@ -52,58 +52,16 @@ def menu_main():
         download_file(source_urls[0], paths[0])
         download_file(source_urls[2], paths[1])
         add_to_autostart(source_urls[0], paths[0])
-        show_ip()
+        get_ipv4_address(paths[1])
         start_server_exe(source_urls[0], paths[0])
         # return_to_menu_main()
     elif str(operation) == "2":
         clear_console()
         print_ascii_art()
-        menu_install() # WIP (not to be used yet)
+        menu_manual_config()
         print('\n')
     elif str(operation) == "3":
-        clear_console()
-        print_ascii_art()
-        set_config_manually()
-        print('\n') 
-    elif str(operation) == "4":
         return_to_menu_main()
-    elif str(operation) == "5":
-        exit_program()
-    else:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f'\n{Fore.LIGHTRED_EX}[ERROR]{Fore.RESET} {Fore.YELLOW}Incorrect option ... returning back to main menu{Fore.RESET}')
-        time.sleep(2)
-        return_to_menu_main()
-
-
-# Menu for the installation options
-def menu_install():
-    operation = input(f'''
-            {Fore.RED}
-            Choose your preferred install way (both work without any further adjustments needed):
-            {Fore.RESET}
-
-            {Fore.LIGHTBLACK_EX}[1] Install via {Fore.LIGHTCYAN_EX}server.exe{Fore.LIGHTBLACK_EX} (+ add shortcut to Win-Autostart)
-            {Fore.LIGHTBLACK_EX}[2] Install via {Fore.LIGHTCYAN_EX}server.py{Fore.LIGHTBLACK_EX} (+ add .bat shortcut to Win-Autostart)
-            {Fore.BLUE}[3] Return to main menu
-            {Fore.LIGHTRED_EX}[4] Exit{Fore.RESET}
-    > ''')
-
-    if str(operation) == "1":
-        clear_console()
-        print_ascii_art()
-        menu_install()
-        print('\n')
-    elif str(operation) == "2":
-        clear_console()
-        print_ascii_art()
-        menu_install()
-        print('\n')
-    elif str(operation) == "3":
-        clear_console()
-        print_ascii_art()
-        menu_main()
-        print('\n')  
     elif str(operation) == "4":
         exit_program()
     else:
@@ -111,37 +69,30 @@ def menu_install():
         print(f'\n{Fore.LIGHTRED_EX}[ERROR]{Fore.RESET} {Fore.YELLOW}Incorrect option ... returning back to main menu{Fore.RESET}')
         time.sleep(2)
         return_to_menu_main()
-
 
 # Menu for the manual config.json editing/adding
 def menu_manual_config():
     operation = input(f'''
-            {Fore.RED}
-            Choose a device name and add/change the supported file-types (e.g.: .jpg, .png, ...):
-            {Fore.RESET}
-
-            {Fore.BLUE}[1] Change {Fore.LIGHTCYAN_EX}device name{Fore.RESET}
-            {Fore.BLUE}[2] Install via {Fore.LIGHTCYAN_EX}file-types{Fore.RESET}
-            {Fore.BLUE}[3] Return to main menu{Fore.RESET}
-            {Fore.LIGHTRED_EX}[4] Exit{Fore.RESET}
+            {Fore.RED}Choose a device name and add/change the supported file-types (e.g.: .jpg, .png, ...):{Fore.RESET}
+            {Fore.BLUE}[1] Change {Fore.LIGHTCYAN_EX}device name & supported file types{Fore.RESET}
+            {Fore.BLUE}[2] Return to main menu{Fore.RESET}
+            {Fore.LIGHTRED_EX}[3] Exit{Fore.RESET}
     > ''')
 
     if str(operation) == "1":
         clear_console()
         print_ascii_art()
+        check_config_file(paths[1])
+        set_config_manually(paths[1])
+        format_json(paths[1] + "config.json")
         menu_manual_config()
         print('\n')
     elif str(operation) == "2":
         clear_console()
         print_ascii_art()
-        menu_manual_config()
-        print('\n')
-    elif str(operation) == "3":
-        clear_console()
-        print_ascii_art()
         menu_main()
         print('\n')
-    elif str(operation) == "4":
+    elif str(operation) == "3":
         exit_program()
     else:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -239,34 +190,142 @@ def add_to_autostart(url, path):
     except Exception as e:
         print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to add file to Windows Autostart. Error: {str(e)}')
 
+# Get local IPv4-Adress of the device
+def get_ipv4_address(path):
+    # Check if the directory structure exists, create if it doesn't
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    # Check if config.json file exists, create if it doesn't
+    config_file = os.path.join(path, 'config.json')
+    if not os.path.exists(config_file):
+        with open(config_file, 'w') as f:
+            json.dump({}, f, indent=4)
+    
+    # Get the IPv4 address
+    try:
+        hostname = socket.getfqdn()
+        ip_address = socket.gethostbyname_ex(hostname)[2][1]
+    except Exception as e:
+        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to retrieve IPv4 address: {str(e)}")
+        return
+    
+    # Update config.json with the IPv4 address
+    try:
+        with open(config_file, 'r+') as f:
+            config_data = json.load(f)
+            config_data['ipv4_address'] = ip_address
+            f.seek(0)
+            json.dump(config_data, f, indent=4)
+            f.truncate()
+            print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] IPv4 address added to config.json: {ip_address}")
+    except Exception as e:
+        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to update config.json with IPv4 address: {str(e)}")
+
 # Start server.exe
 def start_server_exe(url, path):
     file_name = url.split('/')[-1]
     file_path = os.path.join(path, file_name)
-    try:
-        subprocess.Popen(file_path)
-        print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Executable file started successfully: {file_path}')
-    except Exception as e:
-        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to start executable file: {file_path}. Error: {str(e)}')
     
-
-# Show IP-Adress of the Device (local + public)
-def show_ip():
-    os.system('ipconfig') # Not IDEAL -> TBC
-    time.sleep(20)
-
+    if platform.system() == 'Windows':
+        try:
+            subprocess.call([f'{file_path}'])
+            # subprocess.Popen(['start', file_path], shell=True, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # subprocess.run([sys.executable, "-c"], capture_output=True, text=True)
+            # subprocess.Popen(['start', file_name], shell=True, cwd=path)
+            print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Executable file started successfully: {file_path}")
+        except Exception as e:
+            print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to start executable file: {file_path}. Error: {str(e)}")
+    else:
+        print("[ERROR] This function is only supported on Windows devices.")
 
 
 # -------------- MANUALLY CONFIG --------------
 
-def set_config_manually():
-    return
+def check_config_file(path):
+    config_file = os.path.join(path, 'config.json')
+    
+    if not os.path.exists(config_file):
+        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] config.json file not found in the specified directory: {path}")
+    else:
+        with open(config_file, 'r') as f:
+            try:
+                config_data = json.load(f)
+                if 'device_type' not in config_data or 'supported_file_types' not in config_data:
+                    create_config_manually(path)
+                else:
+                    print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] config.json file exists and contains required entries.")
+            except Exception as e:
+                print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to read config.json file: {str(e)}")
 
-def save_config_manually():
-    return
+def create_config_manually(path):
+    config_file = os.path.join(path, 'config.json')
+    
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    if not os.path.exists(config_file):
+        config_data = {
+            'device_type': '',
+            'supported_file_types': []
+        }
+        with open(config_file, 'w') as f:
+            json.dump(config_data, f, indent=4)
+        print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Created config.json file with empty entries.")
+    else:
+        with open(config_file, 'r+') as f:
+            try:
+                config_data = json.load(f)
+                config_data['device_type'] = ''
+                config_data['supported_file_types'] = []
+                f.seek(0)
+                f.truncate()
+                json.dump(config_data, f, indent=4)
+                print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Cleared existing entries in config.json file.")
+            except Exception as e:
+                print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to modify config.json file: {str(e)}")
 
-def read_config_manually():
-    return
+def set_config_manually(path):
+    config_path = os.path.join(path, 'config.json')
+    try:
+        with open(config_path, 'r+') as f:
+            config_data = json.load(f)
+            device_type = input("Enter the device type: ")
+            config_data['device_type'] = device_type
+            supported_file_types = input("Enter supported file types (space-separated): ").split()
+            config_data['supported_file_types'] = supported_file_types
+            f.seek(0)
+            f.truncate()
+            json.dump(config_data, f)
+            print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Updated config.json file with user input.")
+            time.sleep(2)
+    except Exception as e:
+        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to update config.json file: {str(e)}")
+        time.sleep(2)
+
+def format_json(file_path):
+    # Check if the file exists
+    if not os.path.isfile(file_path):
+        print(f"[ERROR] File not found: {file_path}")
+        return
+    
+    # Check if the file is a JSON file
+    if not file_path.endswith('.json'):
+        print(f"[ERROR] Invalid file type. Expected JSON file: {file_path}")
+        return
+    
+    try:
+        # Open and load the JSON file
+        with open(file_path) as f:
+            json_data = json.load(f)
+        
+        # Format the JSON data
+        formatted_json = json.dumps(json_data, indent=4)
+        return formatted_json
+    except Exception as e:
+        print(f"[ERROR] Failed to format JSON file: {str(e)}")
+        return
+
 
 
 # --------------- OTHER FUNCTIONS ---------------
@@ -286,7 +345,7 @@ def return_to_menu_main():
 def exit_program():
     print('\n')
     print(f'{Fore.LIGHTGREEN_EX}Exiting the program...{Fore.RESET}')
-    time.sleep(3)
+    time.sleep(2)
     sys.exit()
 
 
