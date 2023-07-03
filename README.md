@@ -1,5 +1,7 @@
 # SWD_laborSoftware_pyDevices
-WICHTIG: Dieses Repository dieht als Sammel-Repository für den Dev-Test-Client, Server welcher am Ende auf dem Gerät laufen soll/wird und dem Setup um den Server über ein Termina-Interface aufzusetzten.
+WICHTIG: Dieses Repository dieht als Sammel-Repository für den Dev-Test-Client, Server welcher am Ende auf dem Gerät laufen soll/wird und dem Setup um den Server über ein Termina-Interface aufzusetzten. Für die vollständige Funktionalität des Device-Servers werden folgende Repositories benötigt:
+- [Front-End](https://github.com/Flo-Gaupp/SWD_laborSoftware_frontend)
+- [Back-End](https://github.com/Flo-Gaupp/SWD_laborSoftware_backend)
 
 ## Einleitung
 Im Rahmen des Softwaredesign-Praktikums des Studienganges MIB haben wir eine Laborsoftware entwickelt, die es ermöglicht, Bilder, Slideshows und Videos auf einem Windows PC abzuspielen. Das Projekt umfasste die Planung der Software mithilfe verschiedener Management- und Planungsstrategien, die uns zur Verfügung gestellt wurden, sowie die Entwicklung einer Demonstrationssoftware für eine Smart-Lab-Umgebung.
