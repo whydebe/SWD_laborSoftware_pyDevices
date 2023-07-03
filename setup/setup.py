@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import shutil
 import socket
 import platform
 import subprocess
@@ -37,7 +38,7 @@ def menu_main():
             {Fore.RED}What do you want to do? - Choose the option by entering the specific number{Fore.RESET}
             {Fore.BLUE}[1] Auto-Setup (Chocolatey, VLC + Setup of server.exe) + Start{Fore.RESET}
             {Fore.BLUE}[2] Set config.json manually{Fore.RESET}
-            {Fore.LIGHTBLACK_EX}[3] Uninstall (but not the setup.exe) (WIP){Fore.RESET}
+            {Fore.LIGHTBLACK_EX}[3] Uninstall (but not the setup.exe){Fore.RESET}
             {Fore.LIGHTRED_EX}[4] Exit{Fore.RESET}
     > ''')
 
@@ -60,7 +61,13 @@ def menu_main():
         print_ascii_art()
         menu_manual_config()
         print('\n')
+        # return_to_menu_main()
     elif str(operation) == "3":
+        clear_console()
+        print_ascii_art()
+        print('\n')
+        remove_from_autostart(source_urls[0])
+        remove_install_directory()
         return_to_menu_main()
     elif str(operation) == "4":
         exit_program()
@@ -271,7 +278,7 @@ def create_config_manually(path):
         }
         with open(config_file, 'w') as f:
             json.dump(config_data, f, indent=4)
-        print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Created config.json file with empty entries.")
+        print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Created config.json file with empty entries.')
     else:
         with open(config_file, 'r+') as f:
             try:
@@ -281,37 +288,37 @@ def create_config_manually(path):
                 f.seek(0)
                 f.truncate()
                 json.dump(config_data, f, indent=4)
-                print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Cleared existing entries in config.json file.")
+                print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Cleared existing entries in config.json file.')
             except Exception as e:
-                print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to modify config.json file: {str(e)}")
+                print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to modify config.json file: {str(e)}')
 
 def set_config_manually(path):
     config_path = os.path.join(path, 'config.json')
     try:
         with open(config_path, 'r+') as f:
             config_data = json.load(f)
-            device_type = input("Enter the device type: ")
+            device_type = input('Enter the device type: ')
             config_data['device_type'] = device_type
-            supported_file_types = input("Enter supported file types (space-separated): ").split()
+            supported_file_types = input('Enter supported file types (space-separated): ').split()
             config_data['supported_file_types'] = supported_file_types
             f.seek(0)
             f.truncate()
             json.dump(config_data, f)
-            print(f"[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Updated config.json file with user input.")
+            print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Updated config.json file with user input.')
             time.sleep(2)
     except Exception as e:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to update config.json file: {str(e)}")
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to update config.json file: {str(e)}')
         time.sleep(2)
 
 def format_json(file_path):
     # Check if the file exists
     if not os.path.isfile(file_path):
-        print(f"[ERROR] File not found: {file_path}")
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] File not found: {file_path}')
         return
     
     # Check if the file is a JSON file
     if not file_path.endswith('.json'):
-        print(f"[ERROR] Invalid file type. Expected JSON file: {file_path}")
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Invalid file type. Expected JSON file: {file_path}')
         return
     
     try:
@@ -323,8 +330,43 @@ def format_json(file_path):
         formatted_json = json.dumps(json_data, indent=4)
         return formatted_json
     except Exception as e:
-        print(f"[ERROR] Failed to format JSON file: {str(e)}")
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to format JSON file: {str(e)}')
         return
+
+
+
+# ----------------- UNINSTALL -----------------
+
+# Removes the shortcut to the server.exe from the Windows Auto-Start folder
+def remove_from_autostart(url):
+    file_name = url.split('/')[-1]
+    shortcut_name = f'{file_name}.lnk'
+    shortcut_path = os.path.join(winshell.startup(), shortcut_name)
+    
+    try:
+        if os.path.exists(shortcut_path):
+            os.remove(shortcut_path)
+            print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] File removed from Windows Autostart successfully!')
+        else:
+            print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] File is not present in Windows Autostart.')
+    except Exception as e:
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to remove file from Windows Autostart. Error: {str(e)}')
+    
+# Removes the ./pyDeviceServer/ and all its subfolders and files recursively
+def remove_install_directory():
+    directory_path = './pyDeviceServer/'
+
+    if not os.path.exists(directory_path):
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}]] Directory does not exist: {directory_path}')
+        return
+
+    try:
+        shutil.rmtree(directory_path)
+        print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Directory {directory_path} and its contents have been deleted successfully!')
+        time.sleep(2)
+    except Exception as e:
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to delete directory: {str(e)}')
+        time.sleep(2)
 
 
 
