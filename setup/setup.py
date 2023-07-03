@@ -38,7 +38,7 @@ def menu_main():
             {Fore.RED}What do you want to do? - Choose the option by entering the specific number{Fore.RESET}
             {Fore.BLUE}[1] Auto-Setup (Chocolatey, VLC + Setup of server.exe) + Start{Fore.RESET}
             {Fore.BLUE}[2] Set config.json manually{Fore.RESET}
-            {Fore.LIGHTBLACK_EX}[3] Uninstall (but not the setup.exe){Fore.RESET}
+            {Fore.BLUE}[3] Uninstall (but not the setup.exe) (WIP){Fore.RESET}
             {Fore.LIGHTRED_EX}[4] Exit{Fore.RESET}
     > ''')
 
@@ -74,7 +74,6 @@ def menu_main():
     else:
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f'\n{Fore.LIGHTRED_EX}[ERROR]{Fore.RESET} {Fore.YELLOW}Incorrect option ... returning back to main menu{Fore.RESET}')
-        time.sleep(2)
         return_to_menu_main()
 
 # Menu for the manual config.json editing/adding
@@ -104,7 +103,6 @@ def menu_manual_config():
     else:
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f'\n{Fore.LIGHTRED_EX}[ERROR]{Fore.RESET} {Fore.YELLOW}Incorrect option ... returning back to main menu{Fore.RESET}')
-        time.sleep(2)
         return_to_menu_main()
 
 
@@ -305,10 +303,8 @@ def set_config_manually(path):
             f.truncate()
             json.dump(config_data, f)
             print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Updated config.json file with user input.')
-            time.sleep(2)
     except Exception as e:
         print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to update config.json file: {str(e)}')
-        time.sleep(2)
 
 def format_json(file_path):
     # Check if the file exists
@@ -357,16 +353,14 @@ def remove_install_directory():
     directory_path = './pyDeviceServer/'
 
     if not os.path.exists(directory_path):
-        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}]] Directory does not exist: {directory_path}')
+        print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Directory does not exist: {directory_path}')
         return
 
     try:
         shutil.rmtree(directory_path)
         print(f'[{Fore.LIGHTGREEN_EX}SYSTEM{Fore.RESET}] Directory {directory_path} and its contents have been deleted successfully!')
-        time.sleep(2)
     except Exception as e:
         print(f'[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Failed to delete directory: {str(e)}')
-        time.sleep(2)
 
 
 
@@ -378,6 +372,8 @@ def clear_console():
 
 # Return to main menu
 def return_to_menu_main():
+    time.sleep(5)
+    clear_console()
     # operation = input(f'{Fore.LIGHTGREEN_EX}Press any key to return to the main menu...{Fore.RESET}')
     print_ascii_art()
     menu_main()
@@ -386,8 +382,8 @@ def return_to_menu_main():
 # Exit the program
 def exit_program():
     print('\n')
-    print(f'{Fore.LIGHTGREEN_EX}Exiting the program...{Fore.RESET}')
-    time.sleep(2)
+    print(f'{Fore.LIGHTGREEN_EX}Exiting the program in three seconds ...{Fore.RESET}')
+    time.sleep(3)
     sys.exit()
 
 
